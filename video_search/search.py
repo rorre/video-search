@@ -1,0 +1,48 @@
+import heapq
+from dataclasses import dataclass
+from typing import Callable
+
+from imagehash import ImageHash, phash
+from PIL.Image import Image
+
+from video_search.hash import VideoFrameHash
+from video_search.storage import HashStorage
+
+
+@dataclass
+class Result:
+    base: ImageHash
+    match: VideoFrameHash
+
+    def __lt__(self, other: "Result"):
+        # !!! Value is negated for purpose of max heap
+        return -self._value() < -other._value()
+
+    def _value(self):
+        return self.match.hash - self.base
+
+    @property
+    def similarity(self):
+        return 1.0 - (self._value() / 64)
+
+
+def search_similar(
+    image: Image,
+    storage: HashStorage,
+    hash_algorithm: Callable[[Image], ImageHash] = phash,
+):
+    current_hash = hash_algorithm(image)
+
+    # The heap must be a max-heap, because heappushpop() will pop the lowest value
+    # Therefore when all of this are done, it will be the least differ from base.
+    h: list[Result] = []
+    capacity = 50
+    for hash in storage:
+        c = Result(current_hash, hash)
+        if len(h) < capacity:
+            heapq.heappush(h, c)
+        else:
+            heapq.heappushpop(h, c)
+
+    # Result is reversed because of max heap
+    return reversed([heapq.heappop(h) for i in range(len(h))])
