@@ -1,15 +1,16 @@
-from PIL.Image import Image
-from pathlib import Path
-from imagehash import ImageHash
-from io import BytesIO
 import struct
 from contextlib import contextmanager
+from io import BytesIO
 from os import PathLike
+from pathlib import Path
 from typing import Any, BinaryIO, Callable
 
-from video_search.hash import VideoFrameHash
 import numpy as np
+from imagehash import ImageHash
 from PIL import Image as PILImage
+from PIL.Image import Image
+
+from video_search.hash import VideoFrameHash
 
 
 class LazyVideoFrameHash:
