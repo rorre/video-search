@@ -27,7 +27,8 @@ def hash_video(
         frame_hash = VideoFrameHash(im, current, video, frame.time)
 
         if not previous_hash:
-            progress_callback(frame.time, real_duration)
+            if progress_callback:
+                progress_callback(frame.time, real_duration)
             yield frame_hash
             previous_hash = current
             continue
@@ -38,5 +39,6 @@ def hash_video(
             progress_callback(frame.time, real_duration)
             previous_hash = current
 
-    progress_callback(real_duration, real_duration)
+    if progress_callback:
+        progress_callback(real_duration, real_duration)
     vid.close()
