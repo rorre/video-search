@@ -1,6 +1,6 @@
 import heapq
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from imagehash import ImageHash, phash
 from PIL.Image import Image
@@ -30,13 +30,14 @@ def search_similar(
     storage: HashStorage,
     hash_algorithm: Callable[[Image], ImageHash] = phash,
     top_n: int = 50,
+    progress_callback: Callable[[float, float], Any] | None = None,
 ):
     current_hash = hash_algorithm(image)
 
     # The heap must be a max-heap, because heappushpop() will pop the lowest value
     # Therefore when all of this are done, it will be the least differ from base.
     h: list[Result] = []
-    for hash in storage:
+    for hash in storage.iter_with_progress(progress_callback):
         c = Result(current_hash, hash)
         if len(h) < top_n:
             heapq.heappush(h, c)

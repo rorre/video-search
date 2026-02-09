@@ -59,6 +59,7 @@ class IndexWorker(QRunnable):
 class SearchWorker(QRunnable):
     class Signals(QObject):
         result = pyqtSignal(object)
+        search_progress = pyqtSignal(float, float)
         finished = pyqtSignal()
         error = pyqtSignal(str)
 
@@ -73,7 +74,10 @@ class SearchWorker(QRunnable):
     def run(self):
         try:
             with open_storage(self.db_path) as storage:
-                results = search_similar(Image.open(self.image_path), storage)
+                def cb(current: float, total: float):
+                    self.signals.search_progress.emit(current, total)
+
+                results = search_similar(Image.open(self.image_path), storage, progress_callback=cb)
                 for r in results:
                     if r.similarity >= self.threshold:
                         self.signals.result.emit(r)

@@ -5,7 +5,7 @@ from io import BytesIO
 import struct
 from contextlib import contextmanager
 from os import PathLike
-from typing import BinaryIO
+from typing import Any, BinaryIO, Callable
 
 from video_search.hash import VideoFrameHash
 import numpy as np
@@ -60,6 +60,20 @@ class HashStorage:
                 yield self.read_one()
             except:
                 return
+
+    def iter_with_progress(
+        self, progress_callback: Callable[[float, float], Any] | None = None
+    ):
+        self._file.seek(0, 2)
+        total = float(self._file.tell())
+        self._file.seek(0)
+        for item in self:
+            if progress_callback:
+                progress_callback(float(self._file.tell()), total)
+            yield item
+
+        if progress_callback:
+            progress_callback(total, total)
 
     def append_hash(self, hash: VideoFrameHash):
         data = hash.to_bytes()

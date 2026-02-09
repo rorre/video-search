@@ -55,7 +55,14 @@ def search(
     threshold: Annotated[float, typer.Option(help="Threshold for similarity")] = 0.8,
 ):
     with open_storage(global_config["db"]) as storage:
-        res = search_similar(Image.open(image), storage)
+        with Progress() as progress:
+            task = progress.add_task("Searching...")
+
+            def cb(current: float, total: float):
+                progress.update(task, total=total, completed=current)
+
+            res = search_similar(Image.open(image), storage, progress_callback=cb)
+
         for x in res:
             if x.similarity < threshold:
                 continue

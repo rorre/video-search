@@ -287,6 +287,11 @@ class SearchTab(QWidget):
         top_row.addWidget(self._search_btn)
         layout.addLayout(top_row)
 
+        self._search_progress = QProgressBar()
+        self._search_progress.setFormat("%p%")
+        self._search_progress.setVisible(False)
+        layout.addWidget(self._search_progress)
+
         self._preview = QLabel()
         self._preview.setFixedHeight(150)
         self._preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -360,6 +365,7 @@ class SearchTab(QWidget):
         worker.signals.result.connect(self._on_result)
         worker.signals.finished.connect(self._on_finished)
         worker.signals.error.connect(self._on_error)
+        worker.signals.search_progress.connect(self._on_search_progress)
         QThreadPool.globalInstance().start(worker)
 
     def _on_result(self, result):
@@ -369,7 +375,16 @@ class SearchTab(QWidget):
         )
         self._results_layout.addWidget(card)
 
+    def _on_search_progress(self, current: float, total: float):
+        self._search_progress.setVisible(True)
+        if total > 0:
+            self._search_progress.setMaximum(1000)
+            self._search_progress.setValue(int(current / total * 1000))
+        else:
+            self._search_progress.setValue(0)
+
     def _on_finished(self):
+        self._search_progress.setVisible(False)
         self._search_btn.setEnabled(True)
         count = self._results_layout.count()
         self._status_bar.showMessage(f"Found {count} result(s).", 5000)
@@ -379,6 +394,7 @@ class SearchTab(QWidget):
             self._results_layout.addWidget(lbl)
 
     def _on_error(self, msg: str):
+        self._search_progress.setVisible(False)
         self._search_btn.setEnabled(True)
         self._status_bar.showMessage("Search failed.", 5000)
         QMessageBox.critical(self, "Error", msg)
