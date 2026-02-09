@@ -30,16 +30,16 @@ def search_similar(
     image: Image,
     storage: HashStorage,
     hash_algorithm: Callable[[Image], ImageHash] = phash,
+    top_n: int = 50,
 ):
     current_hash = hash_algorithm(image)
 
     # The heap must be a max-heap, because heappushpop() will pop the lowest value
     # Therefore when all of this are done, it will be the least differ from base.
     h: list[Result] = []
-    capacity = 50
     for hash in storage:
         c = Result(current_hash, hash)
-        if len(h) < capacity:
+        if len(h) < top_n:
             heapq.heappush(h, c)
         else:
             heapq.heappushpop(h, c)
