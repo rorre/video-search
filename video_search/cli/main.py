@@ -62,7 +62,7 @@ def search(
 
             print(
                 Panel(
-                    Pixels.from_image(x.match.frame),
+                    Pixels.from_image(x.match.load_image()),
                     title=str(x.match.path),
                     subtitle=f"Time: {format_seconds(x.match.time)}s | Similarity {x.similarity}",
                 )

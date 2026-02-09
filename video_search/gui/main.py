@@ -363,7 +363,7 @@ class SearchTab(QWidget):
         QThreadPool.globalInstance().start(worker)
 
     def _on_result(self, result):
-        pixmap = pil_to_pixmap(result.match.frame)
+        pixmap = pil_to_pixmap(result.match.load_image())
         card = ResultCard(
             pixmap, str(result.match.path), result.match.time, result.similarity
         )

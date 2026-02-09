@@ -5,14 +5,13 @@ from typing import Callable
 from imagehash import ImageHash, phash
 from PIL.Image import Image
 
-from video_search.hash import VideoFrameHash
-from video_search.storage import HashStorage
+from video_search.storage import HashStorage, LazyVideoFrameHash
 
 
 @dataclass
 class Result:
     base: ImageHash
-    match: VideoFrameHash
+    match: LazyVideoFrameHash
 
     def __lt__(self, other: "Result"):
         # !!! Value is negated for purpose of max heap
