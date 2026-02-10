@@ -15,7 +15,7 @@ def hash_video(
     hash_algorithm: Callable[[Image], ImageHash] = phash,
     progress_callback: Callable[[float, float], Any] | None = None,
 ):
-    vid = av.open(video, mode="r", hwaccel=hwaccel)
+    vid = av.open(video, mode="r")
 
     previous_hash = None
     real_duration: float = vid.duration / 1_000_000  # type: ignore
