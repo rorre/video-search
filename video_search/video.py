@@ -2,7 +2,7 @@ from os import PathLike
 from typing import Any, Callable
 
 import av
-from imagehash import ImageHash, dhash, phash
+from imagehash import ImageHash, phash
 from PIL.Image import Image
 
 from video_search.hash import VideoFrameHash
@@ -15,7 +15,7 @@ def hash_video(
     hash_algorithm: Callable[[Image], ImageHash] = phash,
     progress_callback: Callable[[float, float], Any] | None = None,
 ):
-    vid = av.open(video)
+    vid = av.open(video, mode="r", hwaccel=hwaccel)
 
     previous_hash = None
     real_duration: float = vid.duration / 1_000_000  # type: ignore
@@ -36,7 +36,8 @@ def hash_video(
         pct = (current - previous_hash) / 64
         if pct > THRESHOLD:
             yield frame_hash
-            progress_callback(frame.time, real_duration)
+            if progress_callback:
+                progress_callback(frame.time, real_duration)
             previous_hash = current
 
     if progress_callback:
