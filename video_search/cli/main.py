@@ -35,10 +35,15 @@ def index(
         rs = "**/"
 
     with open_storage(global_config["db"]) as storage:
-        for path in track(
-            [*directory.glob(rs + "*.mp4"), *directory.glob(rs + "*.webm")],
-            description="Processing videos...",
-        ):
+        indexed_paths = {str(entry.path) for entry in storage}
+
+        all_videos = [*directory.glob(rs + "*.mp4"), *directory.glob(rs + "*.webm")]
+        new_videos = [p for p in all_videos if str(p.resolve()) not in indexed_paths]
+
+        if skipped := len(all_videos) - len(new_videos):
+            print(f"Skipping {skipped} already indexed video(s).")
+
+        for path in track(new_videos, description="Processing videos..."):
             with Progress() as progress:
                 task = progress.add_task(f"Processing video {path}...")
 

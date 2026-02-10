@@ -1,3 +1,4 @@
+import traceback
 from pathlib import Path
 
 from PIL import Image
@@ -37,6 +38,10 @@ class IndexWorker(QRunnable):
             total = len(files)
 
             with open_storage(self.db_path) as storage:
+                indexed_paths = {str(entry.path) for entry in storage}
+                files = [f for f in files if str(f.resolve()) not in indexed_paths]
+                total = len(files)
+
                 for i, path in enumerate(files):
                     if self._cancelled:
                         return
@@ -53,6 +58,7 @@ class IndexWorker(QRunnable):
                 self.signals.progress.emit(total, total)
             self.signals.finished.emit()
         except Exception as e:
+            traceback.print_exc()
             self.signals.error.emit(str(e))
 
 
@@ -74,13 +80,17 @@ class SearchWorker(QRunnable):
     def run(self):
         try:
             with open_storage(self.db_path) as storage:
+
                 def cb(current: float, total: float):
                     self.signals.search_progress.emit(current, total)
 
-                results = search_similar(Image.open(self.image_path), storage, progress_callback=cb)
+                results = search_similar(
+                    Image.open(self.image_path), storage, progress_callback=cb
+                )
                 for r in results:
                     if r.similarity >= self.threshold:
                         self.signals.result.emit(r)
             self.signals.finished.emit()
         except Exception as e:
+            traceback.print_exc()
             self.signals.error.emit(str(e))
