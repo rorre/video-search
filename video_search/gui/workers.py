@@ -44,18 +44,20 @@ class IndexWorker(QRunnable):
 
                 for i, path in enumerate(files):
                     if self._cancelled:
-                        return
+                        break
                     self.signals.progress.emit(i, total)
 
                     def cb(start: float, end: float):
                         self.signals.file_progress.emit(str(path.name), start, end)
 
                     for h in hash_video(path, progress_callback=cb):
-                        if self._cancelled:
-                            return
                         storage.append_hash(h)
 
-                self.signals.progress.emit(total, total)
+                    if self._cancelled:
+                        break
+
+                if not self._cancelled:
+                    self.signals.progress.emit(total, total)
             self.signals.finished.emit()
         except Exception as e:
             traceback.print_exc()

@@ -195,6 +195,12 @@ class IndexTab(QWidget):
         self._index_btn.clicked.connect(self._start_index)
         btn_row.addStretch()
         btn_row.addWidget(self._index_btn)
+
+        self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn.setVisible(False)
+        self._cancel_btn.clicked.connect(self._cancel_index)
+        btn_row.addWidget(self._cancel_btn)
+
         btn_row.addStretch()
         layout.addLayout(btn_row)
 
@@ -223,6 +229,7 @@ class IndexTab(QWidget):
         db_path = Path(self._settings.db_path)
 
         self._index_btn.setEnabled(False)
+        self._cancel_btn.setVisible(True)
         self._progress_group.setVisible(True)
         self._overall_progress.setValue(0)
         self._file_progress.setValue(0)
@@ -234,6 +241,12 @@ class IndexTab(QWidget):
         self._worker.signals.finished.connect(self._on_finished)
         self._worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(self._worker)
+
+    def _cancel_index(self):
+        if self._worker:
+            self._worker.cancel()
+            self._cancel_btn.setEnabled(False)
+            self._status_bar.showMessage("Cancelling after current file...")
 
     def _on_progress(self, current: int, total: int):
         self._overall_progress.setMaximum(total)
@@ -249,13 +262,21 @@ class IndexTab(QWidget):
             self._file_progress.setValue(0)
 
     def _on_finished(self):
+        cancelled = self._worker._cancelled if self._worker else False
         self._index_btn.setEnabled(True)
+        self._cancel_btn.setVisible(False)
+        self._cancel_btn.setEnabled(True)
         self._progress_group.setVisible(False)
-        self._status_bar.showMessage("Indexing complete.", 5000)
+        if cancelled:
+            self._status_bar.showMessage("Indexing cancelled.", 5000)
+        else:
+            self._status_bar.showMessage("Indexing complete.", 5000)
         self._worker = None
 
     def _on_error(self, msg: str):
         self._index_btn.setEnabled(True)
+        self._cancel_btn.setVisible(False)
+        self._cancel_btn.setEnabled(True)
         self._progress_group.setVisible(False)
         self._status_bar.showMessage("Indexing failed.", 5000)
         QMessageBox.critical(self, "Error", msg)
