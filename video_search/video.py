@@ -35,7 +35,8 @@ def hash_video(
     vid = av.open(video, mode="r")
 
     previous_hash = None
-    real_duration: float = vid.duration / 1_000_000  # type: ignore
+    duration_micro = vid.duration or 0
+    real_duration: float = duration_micro / 1_000_000  # type: ignore
     for frame in vid.decode(video=0):
         thumbnail_size = calculate_thumbnail_size(
             (frame.width, frame.height),
