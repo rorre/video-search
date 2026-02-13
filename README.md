@@ -11,8 +11,6 @@ uv run python -m video_search.gui.main
 
 CLI
 ```
-uv run python main.py
-```
 ❯ python main.py --help               
                                                                                     
  Usage: main.py [OPTIONS] COMMAND [ARGS]...                                         
